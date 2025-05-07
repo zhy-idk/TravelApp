@@ -1,36 +1,41 @@
 package com.example.travelapp;
 
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 
 import java.util.List;
 
 public interface ApiService {
-    // Getting Data
+    // Creating Data
+    @Multipart
+    @POST("flight/")
+    Call<FlightModelClass> createFlight(
+            @Part MultipartBody.Part image,
+            @Part("airline") RequestBody airline,
+            @Part("schedule") RequestBody schedule,
+            @Part("seat_count") RequestBody seatCount,
+            @Part("origin") RequestBody origin,
+            @Part("destination") RequestBody destination
+    );
+
+    // Reading Data
     @GET("flight/")
     Call<List<FlightModelClass>> getFlights();
 
-    @GET("hotels/")
-    Call<List<HotelModelClass>> getHotels();
-
-
-    // POST: Create a new flight
-    @POST("flight/create/")
-    Call<FlightModelClass> createFlight(@Body FlightModelClass flight);
-
-    // PUT: Update an existing flight
-    @PUT("flight/{id}")
+    // Updating Data
+    @PUT("flight/{id}/")
     Call<FlightModelClass> updateFlight(@Path("id") int flightId, @Body FlightModelClass flight);
 
-    // POST: Create a new hotel
-    @POST("hotels")
-    Call<HotelModelClass> createHotel(@Body HotelModelClass hotel);
-
-    // PUT: Update an existing hotel
-    @PUT("hotels/{id}")
-    Call<HotelModelClass> updateHotel(@Path("id") int hotelId, @Body HotelModelClass hotel);
+    // Deleting Data
+    @DELETE("flight/{id}/")
+    Call<Void> deleteFlight(@Path("id") int flightId);
 }

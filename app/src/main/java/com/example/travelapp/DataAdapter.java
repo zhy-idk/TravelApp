@@ -1,13 +1,20 @@
 package com.example.travelapp;
 
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class DataAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private List<DataItem> dataList;
@@ -56,6 +63,7 @@ public class DataAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     // Flight ViewHolder
     public class FlightViewHolder extends RecyclerView.ViewHolder {
         TextView textViewAirline, textViewSchedule, textViewSeats, textViewOrigin, textViewDestination;
+        Button btnDel, btnUpd;
 
         public FlightViewHolder(View itemView) {
             super(itemView);
@@ -64,6 +72,8 @@ public class DataAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             textViewSeats = itemView.findViewById(R.id.textViewSeats);
             textViewOrigin = itemView.findViewById(R.id.textViewOrigin);
             textViewDestination = itemView.findViewById(R.id.textViewDestination);
+            btnDel = itemView.findViewById(R.id.btnDel);
+            btnUpd = itemView.findViewById(R.id.btnUpd);
         }
 
         public void bind(FlightModelClass flight) {
@@ -72,12 +82,57 @@ public class DataAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             textViewSeats.setText(String.valueOf(flight.getSeat_count()));
             textViewOrigin.setText(flight.getOrigin());
             textViewDestination.setText(flight.getDestination());
+
+            btnDel.setOnClickListener(new View.OnClickListener() {
+                int flightId = flight.getId();
+                @Override
+                public void onClick(View v) {
+                    ApiService apiService = RetrofitClient.getInstance().create(ApiService.class);
+                    Call<Void> call = apiService.deleteFlight(flightId);
+
+                    call.enqueue(new Callback<Void>() {
+                        @Override
+                        public void onResponse(Call<Void> call, Response<Void> response) {
+                            if (response.isSuccessful()) {
+                                Toast.makeText(itemView.getContext(), "Flight deleted", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(itemView.getContext(), "Failed to delete flight", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<Void> call, Throwable t) {
+                            Toast.makeText(itemView.getContext(), "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            });
+
+            btnUpd.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // Intent
+                    Intent intent = new Intent(itemView.getContext(), FlightPreview.class);
+
+                    // Intent Put Extra
+                    intent.putExtra("flightID", flight.getId());
+                    intent.putExtra("flightAirline", flight.getAirline());
+                    intent.putExtra("flightSchedule", flight.getSchedule());
+                    intent.putExtra("flightSeat", flight.getSeat_count());
+                    intent.putExtra("flightOrigin", flight.getOrigin());
+                    intent.putExtra("flightDestination", flight.getDestination());
+
+                    // Intent Call
+                    itemView.getContext().startActivity(intent);
+                }
+            });
         }
     }
 
     // Hotel ViewHolder
     public class HotelViewHolder extends RecyclerView.ViewHolder {
         TextView textViewHotelName, textViewHotelLocation, textViewHotelPrice, textViewHotelRooms;
+        Button btnDel;
 
         public HotelViewHolder(View itemView) {
             super(itemView);
@@ -85,6 +140,7 @@ public class DataAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             textViewHotelLocation = itemView.findViewById(R.id.textViewHotelLocation);
             textViewHotelPrice = itemView.findViewById(R.id.textViewHotelPrice);
             textViewHotelRooms = itemView.findViewById(R.id.textViewHotelRooms);
+            btnDel = itemView.findViewById(R.id.btnDel);
         }
 
         public void bind(HotelModelClass hotel) {

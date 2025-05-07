@@ -14,7 +14,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TravelApp"
         tools:targetApi="31">
-
+        <activity
+            android:name=".FlightCreate"
+            android:exported="false" />
+        <activity
+            android:name=".FlightPreview"
+            android:exported="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
