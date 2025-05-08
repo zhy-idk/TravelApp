@@ -95,7 +95,7 @@ public class FlightCreate extends AppCompatActivity {
         if (imageUri != null) {
             File imageFile = FileUtils.getFileFromUri(FlightCreate.this, imageUri);
             RequestBody imageRequest = RequestBody.create(MediaType.parse("image/*"), imageFile);
-            imagePart = MultipartBody.Part.createFormData("image", imageFile.getName(), imageRequest);
+            imagePart = MultipartBody.Part.createFormData("image_field", imageFile.getName(), imageRequest);
         }
 
         ApiService apiService = RetrofitClient.getInstance().create(ApiService.class);

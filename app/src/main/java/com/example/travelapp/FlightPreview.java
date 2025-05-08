@@ -9,6 +9,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.*;
 
+import com.bumptech.glide.Glide;
+
 import java.io.File;
 
 import okhttp3.MediaType;
@@ -49,6 +51,7 @@ public class FlightPreview extends AppCompatActivity {
         String seatCount = String.valueOf(intent.getIntExtra("flightSeat", 0));
         String origin = intent.getStringExtra("flightOrigin");
         String destination = intent.getStringExtra("flightDestination");
+        String image_field = intent.getStringExtra("flightImage");
 
         // Updating The Text Fields
         edtAirline.setText(airline);
@@ -56,6 +59,8 @@ public class FlightPreview extends AppCompatActivity {
         edtSeat.setText(seatCount);
         edtOrigin.setText(origin);
         edtDest.setText(destination);
+
+        Glide.with(btnUpload.getContext()).load("http://10.10.204.23:8000" + image_field).into(btnUpload);
 
         // Button Functionalities
         btnUpload.setOnClickListener(new View.OnClickListener() {
@@ -81,7 +86,7 @@ public class FlightPreview extends AppCompatActivity {
                 if (selectedImageUri != null) {
                     File imageFile = FileUtils.getFileFromUri(FlightPreview.this, selectedImageUri);
                     RequestBody imageBody = RequestBody.create(MediaType.parse("image/*"), imageFile);
-                    imagePart = MultipartBody.Part.createFormData("image", imageFile.getName(), imageBody);
+                    imagePart = MultipartBody.Part.createFormData("image_field", imageFile.getName(), imageBody);
                 }
 
                 // Retrofit API Call

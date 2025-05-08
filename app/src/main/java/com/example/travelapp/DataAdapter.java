@@ -89,7 +89,7 @@ public class DataAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             textViewOrigin.setText(flight.getOrigin());
             textViewDestination.setText(flight.getDestination());
 
-            Glide.with(imgView.getContext()).load(flight.getImg()).into(imgView);
+            Glide.with(imgView.getContext()).load("http://10.10.204.23:8000" + flight.getImage_field()).into(imgView);
 
             btnDel.setOnClickListener(new View.OnClickListener() {
                 int flightId = flight.getId();
@@ -129,6 +129,7 @@ public class DataAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     intent.putExtra("flightSeat", flight.getSeat_count());
                     intent.putExtra("flightOrigin", flight.getOrigin());
                     intent.putExtra("flightDestination", flight.getDestination());
+                    intent.putExtra("flightImage", flight.getImage_field());
 
                     // Intent Call
                     itemView.getContext().startActivity(intent);

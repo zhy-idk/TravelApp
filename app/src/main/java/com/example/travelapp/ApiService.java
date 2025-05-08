@@ -18,7 +18,7 @@ import java.util.List;
 public interface ApiService {
     // Creating Data
     @Multipart
-    @POST("flight/")
+    @POST("flight/create/")
     Call<FlightModelClass> createFlight(
             @Part("airline") RequestBody airline,
             @Part("schedule") RequestBody schedule,
