@@ -5,10 +5,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
 
 import java.util.List;
 
@@ -64,6 +68,7 @@ public class DataAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public class FlightViewHolder extends RecyclerView.ViewHolder {
         TextView textViewAirline, textViewSchedule, textViewSeats, textViewOrigin, textViewDestination;
         Button btnDel, btnUpd;
+        ImageView imgView;
 
         public FlightViewHolder(View itemView) {
             super(itemView);
@@ -72,6 +77,7 @@ public class DataAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             textViewSeats = itemView.findViewById(R.id.textViewSeats);
             textViewOrigin = itemView.findViewById(R.id.textViewOrigin);
             textViewDestination = itemView.findViewById(R.id.textViewDestination);
+            imgView = itemView.findViewById(R.id.imgView);
             btnDel = itemView.findViewById(R.id.btnDel);
             btnUpd = itemView.findViewById(R.id.btnUpd);
         }
@@ -82,6 +88,8 @@ public class DataAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             textViewSeats.setText(String.valueOf(flight.getSeat_count()));
             textViewOrigin.setText(flight.getOrigin());
             textViewDestination.setText(flight.getDestination());
+
+            Glide.with(imgView.getContext()).load(flight.getImg()).into(imgView);
 
             btnDel.setOnClickListener(new View.OnClickListener() {
                 int flightId = flight.getId();

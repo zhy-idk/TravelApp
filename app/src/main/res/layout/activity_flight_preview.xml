@@ -8,6 +8,13 @@
     android:padding="20dp"
     tools:context=".FlightPreview">
 
+    <ImageButton
+        android:id="@+id/btnUpload"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:scaleType="centerCrop"
+        android:background="@drawable/background_outline" />
+
     <EditText
         android:id="@+id/edtAirline"
         android:layout_width="match_parent"

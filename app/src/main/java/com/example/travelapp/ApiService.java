@@ -2,6 +2,7 @@ package com.example.travelapp;
 
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -19,12 +20,12 @@ public interface ApiService {
     @Multipart
     @POST("flight/")
     Call<FlightModelClass> createFlight(
-            @Part MultipartBody.Part image,
             @Part("airline") RequestBody airline,
             @Part("schedule") RequestBody schedule,
             @Part("seat_count") RequestBody seatCount,
             @Part("origin") RequestBody origin,
-            @Part("destination") RequestBody destination
+            @Part("destination") RequestBody destination,
+            @Part MultipartBody.Part image
     );
 
     // Reading Data
@@ -32,8 +33,17 @@ public interface ApiService {
     Call<List<FlightModelClass>> getFlights();
 
     // Updating Data
+    @Multipart
     @PUT("flight/{id}/")
-    Call<FlightModelClass> updateFlight(@Path("id") int flightId, @Body FlightModelClass flight);
+    Call<ResponseBody> updateFlight(
+            @Path("id") int flightId,
+            @Part("airline") RequestBody airline,
+            @Part("schedule") RequestBody schedule,
+            @Part("seat_count") RequestBody seatCount,
+            @Part("origin") RequestBody origin,
+            @Part("destination") RequestBody destination,
+            @Part MultipartBody.Part image
+    );
 
     // Deleting Data
     @DELETE("flight/{id}/")

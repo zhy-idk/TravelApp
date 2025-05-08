@@ -7,9 +7,10 @@ public class FlightModelClass {
     private int seat_count;
     private String origin;
     private String destination;
+    private String img;
 
     // Constructor
-    public FlightModelClass(int id, String airline, String schedule, int seat_count, String origin, String destination) {
+    public FlightModelClass(int id, String airline, String schedule, int seat_count, String origin, String destination, String img) {
         this.id = id;
         this.airline = airline;
         this.schedule = schedule;
@@ -65,5 +66,13 @@ public class FlightModelClass {
 
     public void setDestination(String destination) {
         this.destination = destination;
+    }
+
+    public String getImg() {
+        return img;
+    }
+
+    public void setImg(String img) {
+        this.img = img;
     }
 }
