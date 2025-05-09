@@ -1,5 +1,8 @@
 package com.example.travelapp;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
@@ -25,7 +28,6 @@ public class FlightCreate extends AppCompatActivity {
     Button btnSave;
     ImageButton btnUpload;
     Uri imageUri;
-    private static final int IMAGE_PICK_CODE = 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,19 +60,19 @@ public class FlightCreate extends AppCompatActivity {
 
     // Upload Image
     public void uploadImage() {
-        Intent intent = new Intent(Intent.ACTION_PICK);
-        intent.setType("image/*");
-        startActivityForResult(intent, IMAGE_PICK_CODE);
+        pickMedia.launch(new PickVisualMediaRequest.Builder()
+                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                .build());
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK && requestCode == IMAGE_PICK_CODE) {
-            imageUri = data.getData();
-            btnUpload.setImageURI(imageUri);
-        }
-    }
+    ActivityResultLauncher<PickVisualMediaRequest> pickMedia =
+            registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
+                btnUpload.setImageURI(uri);
+                if (uri != null) {
+                    String imageId = uri.getLastPathSegment().split(":")[1];
+                    imageUri = Uri.parse("content://media/external/images/media/" + imageId);
+                }
+            });
 
     // Create New Flight
     public void createNewFlight() {

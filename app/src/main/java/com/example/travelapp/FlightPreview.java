@@ -1,11 +1,15 @@
 package com.example.travelapp;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.*;
 
@@ -66,9 +70,9 @@ public class FlightPreview extends AppCompatActivity {
         btnUpload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_PICK);
-                intent.setType("image/*");
-                startActivityForResult(intent, 1001);
+                pickMedia.launch(new PickVisualMediaRequest.Builder()
+                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                        .build());
             }
         });
         btnSave.setOnClickListener(new View.OnClickListener() {
@@ -115,12 +119,13 @@ public class FlightPreview extends AppCompatActivity {
         });
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1001 && resultCode == RESULT_OK && data != null) {
-            selectedImageUri = data.getData();
-            btnUpload.setImageURI(selectedImageUri);
-        }
-    }
+    ActivityResultLauncher<PickVisualMediaRequest> pickMedia =
+            registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
+                btnUpload.setImageURI(uri);
+
+                if (uri != null) {
+                    String imageId = uri.getLastPathSegment().split(":")[1];
+                    selectedImageUri = Uri.parse("content://media/external/images/media/" + imageId);
+                }
+            });
 }

@@ -24,9 +24,9 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
-    private DataAdapter dataAdapter;
-    private List<DataItem> dataList = new ArrayList<>();
-    private Button btnAdd, btnDel;
+    private FlightAdapter dataAdapter;
+    private List<FlightModelClass> dataList = new ArrayList<>();
+    private Button btnAdd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,9 +37,8 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         btnAdd = findViewById(R.id.btnAdd);
-        btnDel = findViewById(R.id.btnDel);
 
-        dataAdapter = new DataAdapter(dataList);
+        dataAdapter = new FlightAdapter(dataList);
         recyclerView.setAdapter(dataAdapter);
 
         // Button Functionality
@@ -48,12 +47,6 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, FlightCreate.class);
                 startActivity(intent);
-            }
-        });
-        btnDel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                deleteFlight(1);
             }
         });
 
@@ -66,32 +59,6 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         timer.scheduleAtFixedRate(task, 0, 1000);
-    }
-
-    // Create a new flight
-
-
-    // Delete an existing flight
-    public void deleteFlight(int flightId) {
-        ApiService apiService = RetrofitClient.getInstance().create(ApiService.class);
-        Call<Void> call = apiService.deleteFlight(flightId);
-
-        call.enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) {
-                    Toast.makeText(MainActivity.this, "Flight deleted", Toast.LENGTH_SHORT).show();
-                    fetchFlights();
-                } else {
-                    Toast.makeText(MainActivity.this, "Failed to delete flight", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
     // Fetch flight data
@@ -107,9 +74,8 @@ public class MainActivity extends AppCompatActivity {
                 if (response.isSuccessful()) {
                     List<FlightModelClass> flights = response.body();
                     if (flights != null && !flights.isEmpty()) {
-                        for (FlightModelClass flight : flights) {
-                            dataList.add(new DataItem(DataItem.TYPE_FLIGHT, flight));
-                        }
+                        dataList.addAll(flights);
+
                         dataAdapter.notifyDataSetChanged();
                     } else {
                         dataAdapter.notifyDataSetChanged();
