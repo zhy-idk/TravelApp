@@ -15,11 +15,10 @@
         android:scaleType="centerCrop"
         android:background="@drawable/background_outline" />
 
-    <EditText
-        android:id="@+id/edtAirline"
+    <Spinner
+        android:id="@+id/spinAirline"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Airline"/>
+        android:layout_height="wrap_content" />
 
     <EditText
         android:id="@+id/edtSchedule"

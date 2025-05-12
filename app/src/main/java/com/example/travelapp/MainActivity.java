@@ -7,15 +7,21 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.TextView;
+import android.widget.EditText;
+import android.widget.ProgressBar;
+import android.widget.ScrollView;
+import android.widget.SearchView;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -24,9 +30,15 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
-    private DataAdapter dataAdapter;
-    private List<DataItem> dataList = new ArrayList<>();
-    private Button btnAdd, btnDel;
+    private FlightAdapter dataAdapter;
+    private List<FlightModelClass> dataList = new ArrayList<>();
+    private Button btnAdd, btnRefresh;
+    private EditText searchView;
+    private ProgressBar progressBar;
+    private ScrollView scrollView;
+    private Spinner spinner;
+
+    private  Call<List<FlightModelClass>> searchCall;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,10 +49,24 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         btnAdd = findViewById(R.id.btnAdd);
-        btnDel = findViewById(R.id.btnDel);
+        btnRefresh = findViewById(R.id.btnRefresh);
 
-        dataAdapter = new DataAdapter(dataList);
+        searchView = findViewById(R.id.searchView);
+        progressBar = findViewById(R.id.progressBar);
+
+        spinner = findViewById(R.id.spinner);
+
+        dataAdapter = new FlightAdapter(dataList);
         recyclerView.setAdapter(dataAdapter);
+        scrollView = findViewById(R.id.scrollView2);
+
+        ArrayList<String> entries = new ArrayList<>();
+        entries.add("airline");
+        entries.add("origin");
+        entries.add("destination");
+
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, entries);
+        spinner.setAdapter(spinnerAdapter);
 
         // Button Functionality
         btnAdd.setOnClickListener(new View.OnClickListener() {
@@ -50,48 +76,86 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-        btnDel.setOnClickListener(new View.OnClickListener() {
+
+        btnRefresh.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                deleteFlight(1);
+            public void onClick(View view) {
+                progressBar.setVisibility(View.VISIBLE);
+                Toast.makeText(MainActivity.this, "Loading...", Toast.LENGTH_SHORT).show();
+
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    fetchFlights();
+                    progressBar.setVisibility(View.INVISIBLE);
+                    scrollView.scrollTo(0,0);
+                    Toast.makeText(MainActivity.this, "Done!", Toast.LENGTH_SHORT).show();
+                }, 3000);
+
             }
         });
 
-        // Call Fetch Methods With Time Interval
-        Timer timer = new Timer();
-        TimerTask task = new TimerTask() {
+        searchView.addTextChangedListener(new TextWatcher() {
             @Override
-            public void run() {
-                fetchFlights();
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
             }
-        };
-        timer.scheduleAtFixedRate(task, 0, 1000);
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                searchFlights(charSequence.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
     }
 
-    // Create a new flight
+    // Search Flights
+    private void searchFlights(String query) {
+        dataList.clear();
 
+        if(searchCall != null){
+            searchCall.cancel();
+        }
+        String airline = null;
+        String origin = null;
+        String destination = null;
 
-    // Delete an existing flight
-    public void deleteFlight(int flightId) {
+        switch(spinner.getSelectedItem().toString()) {
+            case "airline":
+                airline = query;
+                break;
+            case "origin":
+                origin = query;
+                break;
+            case "destination":
+                destination = query;
+                break;
+        }
+
         ApiService apiService = RetrofitClient.getInstance().create(ApiService.class);
-        Call<Void> call = apiService.deleteFlight(flightId);
+        searchCall = apiService.searchFlights(airline, origin, destination);
 
-        call.enqueue(new Callback<Void>() {
+        searchCall.enqueue(new Callback<List<FlightModelClass>>() {
             @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) {
-                    Toast.makeText(MainActivity.this, "Flight deleted", Toast.LENGTH_SHORT).show();
-                    fetchFlights();
-                } else {
-                    Toast.makeText(MainActivity.this, "Failed to delete flight", Toast.LENGTH_SHORT).show();
+            public void onResponse(Call<List<FlightModelClass>> call, Response<List<FlightModelClass>> response) {
+                if (response.isSuccessful()){
+                    List<FlightModelClass> flights = response.body();
+                    if (flights != null && !flights.isEmpty()){
+                        dataList.addAll(flights);
+
+                        dataAdapter.notifyDataSetChanged();
+                    }
                 }
             }
 
             @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            public void onFailure(Call<List<FlightModelClass>> call, Throwable t) {
+
             }
         });
+
     }
 
     // Fetch flight data
@@ -107,11 +171,8 @@ public class MainActivity extends AppCompatActivity {
                 if (response.isSuccessful()) {
                     List<FlightModelClass> flights = response.body();
                     if (flights != null && !flights.isEmpty()) {
-                        for (FlightModelClass flight : flights) {
-                            dataList.add(new DataItem(DataItem.TYPE_FLIGHT, flight));
-                        }
-                        dataAdapter.notifyDataSetChanged();
-                    } else {
+                        dataList.addAll(flights);
+
                         dataAdapter.notifyDataSetChanged();
                     }
                 } else {

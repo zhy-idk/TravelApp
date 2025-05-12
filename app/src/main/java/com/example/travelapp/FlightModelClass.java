@@ -2,7 +2,7 @@ package com.example.travelapp;
 
 public class FlightModelClass {
     private int id;
-    private String airline;
+    private AirlineModelClass airline;
     private String schedule;
     private int seat_count;
     private String origin;
@@ -10,7 +10,7 @@ public class FlightModelClass {
     private String image_field;
 
     // Constructor
-    public FlightModelClass(int id, String airline, String schedule, int seat_count, String origin, String destination, String image_field) {
+    public FlightModelClass(int id, AirlineModelClass airline, String schedule, int seat_count, String origin, String destination, String image_field) {
         this.id = id;
         this.airline = airline;
         this.schedule = schedule;
@@ -19,6 +19,7 @@ public class FlightModelClass {
         this.destination = destination;
         this.image_field = image_field;
     }
+
 
     // Getters and Setters
     public int getId() {
@@ -29,11 +30,11 @@ public class FlightModelClass {
         this.id = id;
     }
 
-    public String getAirline() {
+    public AirlineModelClass getAirline() {
         return airline;
     }
 
-    public void setAirline(String airline) {
+    public void setAirline(AirlineModelClass airline) {
         this.airline = airline;
     }
 

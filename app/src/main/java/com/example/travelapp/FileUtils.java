@@ -1,35 +1,26 @@
 package com.example.travelapp;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
 
 public class FileUtils {
-    public static File getFileFromUri(Context context, Uri uri) {
-        File file = null;
-        String filePath = null;
+    public static String getFilePath(Context context, Uri uri) {
+        Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
+        int column_index = cursor.getColumnIndexOrThrow("_data");
+        cursor.moveToFirst();
+        String s = cursor.getString(column_index);
 
-        if (uri.getScheme().equals("file")) {
-            filePath = uri.getPath();
-        } else if (uri.getScheme().equals("content")) {
-            Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
-            if (cursor != null) {
-                cursor.moveToFirst();
-                int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
-                if (idx != -1) {
-                    filePath = cursor.getString(idx);
-                }
-                cursor.close();
-            }
-        }
-
-        if (filePath != null) {
-            file = new File(filePath);
-        }
-
-        return file;
+        cursor.close();
+        return s;
     }
 }

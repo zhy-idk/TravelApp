@@ -1,16 +1,24 @@
 package com.example.travelapp;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Spinner;
 import android.widget.Toast;
 import java.io.File;
+import java.util.List;
+
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -21,10 +29,12 @@ import retrofit2.Response;
 
 public class FlightCreate extends AppCompatActivity {
     // Declaration
-    EditText edtAirline, edtSchedule, edtSeat, edtOrigin, edtDest;
+    EditText edtSchedule, edtSeat, edtOrigin, edtDest;
     Button btnSave;
     ImageButton btnUpload;
+    Spinner spinAirline;
     Uri imageUri;
+    String airline;
     private static final int IMAGE_PICK_CODE = 1000;
 
     @Override
@@ -33,13 +43,14 @@ public class FlightCreate extends AppCompatActivity {
         setContentView(R.layout.activity_flight_create);
 
         // Initialization
-        edtAirline = findViewById(R.id.edtAirline);
+
         edtSchedule = findViewById(R.id.edtSchedule);
         edtSeat = findViewById(R.id.edtSeat);
         edtOrigin = findViewById(R.id.edtOrigin);
         edtDest = findViewById(R.id.edtDest);
         btnSave = findViewById(R.id.btnSave);
         btnUpload = findViewById(R.id.btnUpload);
+        spinAirline = findViewById(R.id.spinAirline);
 
         // Event Listener
         btnSave.setOnClickListener(new View.OnClickListener() {
@@ -48,33 +59,55 @@ public class FlightCreate extends AppCompatActivity {
                 createNewFlight();
             }
         });
+
         btnUpload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                uploadImage();
+                getImage();
             }
+        });
+
+        // Fetch Airlines
+        ApiService apiService = RetrofitClient.getInstance().create(ApiService.class);
+        Call<List<AirlineModelClass>> call = apiService.getAirlines();
+
+        call.enqueue(new Callback<List<AirlineModelClass>>() {
+             @Override
+             public void onResponse(Call<List<AirlineModelClass>> call, Response<List<AirlineModelClass>> response) {
+                 if (response.isSuccessful()){
+                     List<AirlineModelClass> airlines = response.body();
+                     Log.d("Test airline fetch", airlines.toString());
+                     if (!airlines.isEmpty()){
+                         ArrayAdapter<AirlineModelClass> adapter = new ArrayAdapter<>(FlightCreate.this, android.R.layout.simple_spinner_dropdown_item, airlines);
+                         spinAirline.setAdapter(adapter);
+                         spinAirline.setSelection(0);
+                         }
+                     }
+                 }
+            @Override
+            public void onFailure(Call<List<AirlineModelClass>> call, Throwable t) {
+
+            }
+
         });
     }
 
     // Upload Image
-    public void uploadImage() {
-        Intent intent = new Intent(Intent.ACTION_PICK);
-        intent.setType("image/*");
-        startActivityForResult(intent, IMAGE_PICK_CODE);
+    public void getImage() {
+        pickMedia.launch(new PickVisualMediaRequest.Builder()
+                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                .build());
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK && requestCode == IMAGE_PICK_CODE) {
-            imageUri = data.getData();
-            btnUpload.setImageURI(imageUri);
-        }
-    }
+    ActivityResultLauncher<PickVisualMediaRequest> pickMedia =
+            registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
+                imageUri = uri;
+                btnUpload.setImageURI(imageUri);
+            });
 
     // Create New Flight
     public void createNewFlight() {
-        String airline = edtAirline.getText().toString().trim();
+        airline = spinAirline.getSelectedItem().toString();
         String schedule = edtSchedule.getText().toString().trim();
         String seat = edtSeat.getText().toString().trim();
         String origin = edtOrigin.getText().toString().trim();
@@ -84,8 +117,9 @@ public class FlightCreate extends AppCompatActivity {
             Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        RequestBody airlineRB = RequestBody.create(MediaType.parse("text/plain"), airline);
+        AirlineModelClass selectedAirline = (AirlineModelClass) spinAirline.getSelectedItem();
+        String airlineId = String.valueOf(selectedAirline.getId());
+        RequestBody airlineRB = RequestBody.create(MediaType.parse("text/plain"), airlineId);
         RequestBody scheduleRB = RequestBody.create(MediaType.parse("text/plain"), schedule);
         RequestBody seatRB = RequestBody.create(MediaType.parse("text/plain"), seat);
         RequestBody originRB = RequestBody.create(MediaType.parse("text/plain"), origin);
@@ -93,7 +127,7 @@ public class FlightCreate extends AppCompatActivity {
 
         MultipartBody.Part imagePart = null;
         if (imageUri != null) {
-            File imageFile = FileUtils.getFileFromUri(FlightCreate.this, imageUri);
+            File imageFile = new File(FileUtils.getFilePath(FlightCreate.this, imageUri));
             RequestBody imageRequest = RequestBody.create(MediaType.parse("image/*"), imageFile);
             imagePart = MultipartBody.Part.createFormData("image_field", imageFile.getName(), imageRequest);
         }

@@ -12,6 +12,7 @@ import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 import java.util.List;
 
@@ -20,7 +21,7 @@ public interface ApiService {
     @Multipart
     @POST("flight/create/")
     Call<FlightModelClass> createFlight(
-            @Part("airline") RequestBody airline,
+            @Part("airline_id") RequestBody airline,
             @Part("schedule") RequestBody schedule,
             @Part("seat_count") RequestBody seatCount,
             @Part("origin") RequestBody origin,
@@ -32,12 +33,18 @@ public interface ApiService {
     @GET("flight/")
     Call<List<FlightModelClass>> getFlights();
 
+    @GET("flight/")
+    Call<List<FlightModelClass>> searchFlights(@Query("airline")String airline , @Query("origin")String origin, @Query("destination")String destination);
+
+    @GET("flight/airlines/")
+    Call<List<AirlineModelClass>> getAirlines();
+
     // Updating Data
     @Multipart
     @PUT("flight/{id}/")
     Call<ResponseBody> updateFlight(
             @Path("id") int flightId,
-            @Part("airline") RequestBody airline,
+            @Part("airline_id") RequestBody airline,
             @Part("schedule") RequestBody schedule,
             @Part("seat_count") RequestBody seatCount,
             @Part("origin") RequestBody origin,

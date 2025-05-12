@@ -1,17 +1,24 @@
 package com.example.travelapp;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.*;
 
 import com.bumptech.glide.Glide;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -26,6 +33,7 @@ public class FlightPreview extends AppCompatActivity {
     EditText edtAirline, edtSchedule, edtSeat, edtOrigin, edtDest;
     Button btnSave;
     ImageButton btnUpload;
+    Spinner spnAirline;
 
     Uri selectedImageUri = null;
 
@@ -35,13 +43,14 @@ public class FlightPreview extends AppCompatActivity {
         setContentView(R.layout.activity_flight_preview);
 
         // Initialization
-        edtAirline = findViewById(R.id.edtAirline);
         edtSchedule = findViewById(R.id.edtSchedule);
         edtSeat = findViewById(R.id.edtSeat);
         edtOrigin = findViewById(R.id.edtOrigin);
         edtDest = findViewById(R.id.edtDest);
         btnUpload = findViewById(R.id.btnUpload);
         btnSave = findViewById(R.id.btnSave);
+
+        spnAirline = findViewById(R.id.spnAirline);
 
         // Getting Intent
         Intent intent = getIntent();
@@ -53,29 +62,62 @@ public class FlightPreview extends AppCompatActivity {
         String destination = intent.getStringExtra("flightDestination");
         String image_field = intent.getStringExtra("flightImage");
 
+        // Fetch Airlines
+        ApiService apiService = RetrofitClient.getInstance().create(ApiService.class);
+        Call<List<AirlineModelClass>> call = apiService.getAirlines();
+
+        call.enqueue(new Callback<List<AirlineModelClass>>() {
+            @Override
+            public void onResponse(Call<List<AirlineModelClass>> call, Response<List<AirlineModelClass>> response) {
+                if (response.isSuccessful()){
+                    List<AirlineModelClass> airlines = response.body();
+                    Log.d("Test airline fetch", airlines.toString());
+                    if (!airlines.isEmpty()){
+                        ArrayAdapter<AirlineModelClass> adapter = new ArrayAdapter<>(FlightPreview.this, android.R.layout.simple_spinner_dropdown_item, airlines);
+                        spnAirline.setAdapter(adapter);
+
+                        for (int i = 0; i < airlines.size(); i++) {
+                            if (airlines.get(i).getName().equals(airline)) {
+                                spnAirline.setSelection(i);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<AirlineModelClass>> call, Throwable t) {
+
+            }
+        });
+
+
+
         // Updating The Text Fields
-        edtAirline.setText(airline);
         edtSchedule.setText(schedule);
         edtSeat.setText(seatCount);
         edtOrigin.setText(origin);
         edtDest.setText(destination);
 
-        Glide.with(btnUpload.getContext()).load("http://10.10.204.23:8000" + image_field).into(btnUpload);
+        Glide.with(btnUpload.getContext()).load(RetrofitClient.BASE_URL + image_field).into(btnUpload);
 
         // Button Functionalities
         btnUpload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_PICK);
-                intent.setType("image/*");
-                startActivityForResult(intent, 1001);
+                getImage();
             }
         });
+
+
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Text Fields to RequestBody
-                RequestBody airline = RequestBody.create(MediaType.parse("text/plain"), edtAirline.getText().toString());
+                AirlineModelClass selectedAirline = (AirlineModelClass) spnAirline.getSelectedItem();
+                String airlineId = String.valueOf(selectedAirline.getId());
+                RequestBody airline = RequestBody.create(MediaType.parse("text/plain"), airlineId);
                 RequestBody schedule = RequestBody.create(MediaType.parse("text/plain"), edtSchedule.getText().toString());
                 RequestBody seat = RequestBody.create(MediaType.parse("text/plain"), edtSeat.getText().toString());
                 RequestBody origin = RequestBody.create(MediaType.parse("text/plain"), edtOrigin.getText().toString());
@@ -84,7 +126,7 @@ public class FlightPreview extends AppCompatActivity {
                 // Image File
                 MultipartBody.Part imagePart = null;
                 if (selectedImageUri != null) {
-                    File imageFile = FileUtils.getFileFromUri(FlightPreview.this, selectedImageUri);
+                    File imageFile = new File(FileUtils.getFilePath(FlightPreview.this, selectedImageUri));
                     RequestBody imageBody = RequestBody.create(MediaType.parse("image/*"), imageFile);
                     imagePart = MultipartBody.Part.createFormData("image_field", imageFile.getName(), imageBody);
                 }
@@ -115,12 +157,16 @@ public class FlightPreview extends AppCompatActivity {
         });
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1001 && resultCode == RESULT_OK && data != null) {
-            selectedImageUri = data.getData();
-            btnUpload.setImageURI(selectedImageUri);
-        }
+
+    public void getImage() {
+        pickMedia.launch(new PickVisualMediaRequest.Builder()
+                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                .build());
     }
+
+    ActivityResultLauncher<PickVisualMediaRequest> pickMedia =
+            registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
+                selectedImageUri = uri;
+                btnUpload.setImageURI(selectedImageUri);
+            });
 }

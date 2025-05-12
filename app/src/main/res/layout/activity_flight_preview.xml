@@ -12,14 +12,13 @@
         android:id="@+id/btnUpload"
         android:layout_width="match_parent"
         android:layout_height="200dp"
-        android:scaleType="centerCrop"
-        android:background="@drawable/background_outline" />
+        android:background="@drawable/background_outline"
+        android:scaleType="fitCenter" />
 
-    <EditText
-        android:id="@+id/edtAirline"
+    <Spinner
+        android:id="@+id/spnAirline"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Airline"/>
+        android:layout_height="wrap_content" />
 
     <EditText
         android:id="@+id/edtSchedule"
